@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>나의 흥미 유형 찾기 | 홀랜드 검사</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --R:#E8603C; --I:#3A80C8; --A:#C044A0; --S:#28B068; --E:#E8941A; --C:#6B50A0;
+  --bg:#F5F7FA; --card:#FFFFFF; --text:#1E2230; --muted:#8892A8; --border:#E2E8F0;
+  --radius:18px; --font:'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;line-height:1.6}
+.screen{display:none;min-height:100vh;padding:20px;max-width:780px;margin:0 auto}
+.screen.active{display:block}
+
+/* === START SCREEN === */
+.start-hero{text-align:center;padding:44px 0 28px}
+.start-icon{width:90px;height:90px;background:linear-gradient(135deg,#4A90E2,#764ba2);border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 8px 24px rgba(74,144,226,.3)}
+.start-hero h1{font-size:28px;font-weight:900;margin-bottom:10px;line-height:1.3}
+.start-hero p{color:var(--muted);font-size:15px;line-height:1.8}
+.info-card{background:var(--card);border-radius:var(--radius);padding:22px 24px;margin-bottom:14px;box-shadow:0 2px 14px rgba(0,0,0,.06)}
+.info-card h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.info-row{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text);padding:5px 0}
+.info-row .dot{width:6px;height:6px;border-radius:3px;background:var(--I);margin-top:7px;flex-shrink:0}
+.name-input{width:100%;padding:16px 18px;border:2px solid var(--border);border-radius:14px;font-size:17px;font-family:var(--font);outline:none;transition:border-color .2s;background:var(--bg);margin-top:10px}
+.name-input:focus{border-color:var(--I);background:white}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.type-chip{padding:12px 8px;border-radius:12px;text-align:center;color:white;font-size:13px;font-weight:700;line-height:1.3}
+.type-chip small{display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:2px}
+
+/* === PROGRESS === */
+.progress-bar{position:sticky;top:0;z-index:10;background:var(--bg);padding:14px 0 10px}
+.sec-dots{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.sec-dot{width:10px;height:10px;border-radius:5px;background:var(--border);transition:all .3s}
+.sec-dot.active{width:28px;background:var(--I)}
+.sec-dot.done{background:var(--I);opacity:.4}
+.progress-track{height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--I),var(--A));transition:width .4s ease}
+.progress-info{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;color:var(--muted)}
+
+/* === SURVEY === */
+.section-banner{display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:var(--radius);color:white;margin-bottom:22px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.section-banner .badge{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:2px solid rgba(255,255,255,.3)}
+.section-banner h2{font-size:21px;font-weight:900}
+.section-banner p{font-size:13px;opacity:.88;margin-top:2px}
+
+.q-card{background:var(--card);border-radius:var(--radius);padding:0 22px 4px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.q-item{padding:18px 0;border-bottom:1px solid var(--border)}
+.q-item:last-child{border-bottom:none}
+.q-text{font-size:16px;font-weight:500;margin-bottom:13px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.q-num{min-width:26px;height:26px;border-radius:7px;background:var(--bg);font-size:12px;font-weight:700;text-align:center;line-height:26px;color:var(--muted);flex-shrink:0}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale label{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.scale label input{display:none}
+.scale-btn{width:100%;min-height:56px;border-radius:12px;border:2px solid var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;padding:6px 2px;user-select:none}
+.scale-btn .sn{font-size:20px;font-weight:900;color:var(--muted);line-height:1}
+.scale-btn .sl{font-size:9.5px;color:var(--muted);text-align:center;line-height:1.3;margin-top:3px}
+.scale label input:checked ~ .scale-btn{border-color:var(--active-color, #3A80C8);background:var(--active-color, #3A80C8)}
+.scale label input:checked ~ .scale-btn .sn,
+.scale label input:checked ~ .scale-btn .sl{color:white}
+
+/* === BUTTONS === */
+.nav-btns{display:flex;gap:12px;margin:20px 0 28px}
+.btn{padding:17px 20px;border-radius:14px;font-size:16px;font-weight:700;font-family:var(--font);border:none;cursor:pointer;transition:all .2s;text-align:center}
+.btn-main{background:var(--text);color:white;flex:1}
+.btn-back{background:var(--border);color:var(--text);flex:0 0 auto;padding:17px 22px}
+.btn-start{background:linear-gradient(135deg,#4A90E2,#764ba2);color:white;width:100%;padding:20px;font-size:18px;border-radius:16px;box-shadow:0 6px 20px rgba(74,144,226,.35);margin-top:8px}
+.btn:active{transform:scale(0.97)}
+.error-msg{background:#FFF0EE;border:1.5px solid #FFCDD2;color:#C62828;padding:12px 16px;border-radius:12px;font-size:14px;margin:8px 0;display:none;font-weight:500}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .45s ease}
+
+/* === TIEBREAK === */
+.tie-hero{text-align:center;padding:36px 0 24px}
+.tie-hero h2{font-size:23px;font-weight:900;margin-top:14px}
+.tie-hero p{color:var(--muted);font-size:15px;margin-top:8px}
+.tie-progress{text-align:center;color:var(--muted);font-size:14px;margin-bottom:20px}
+.tie-card{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:14px;box-shadow:0 2px 14px rgba(0,0,0,.06)}
+.tie-q{font-size:16px;font-weight:700;margin-bottom:18px;text-align:center}
+.tie-options{display:flex;flex-direction:column;gap:12px}
+.tie-btn{width:100%;padding:20px 22px;border-radius:14px;border:2.5px solid var(--border);background:var(--bg);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:14px;line-height:1.4}
+.tie-btn .tie-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.tie-btn:active{transform:scale(.98)}
+.tie-btn:hover{border-color:var(--I);background:white}
+
+/* === RESULT === */
+.result-top{text-align:center;padding:32px 0 20px}
+.result-title{font-size:22px;font-weight:900;margin-bottom:4px}
+.result-sub{color:var(--muted);font-size:14px}
+.code-row{display:flex;justify-content:center;align-items:center;gap:10px;margin:18px 0}
+.code-badge{width:80px;height:80px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-weight:900;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.code-badge .cl{font-size:36px;line-height:1}
+.code-badge .cn{font-size:11px;margin-top:2px;opacity:.9}
+.code-plus{font-size:24px;color:var(--muted);font-weight:900}
+.rank-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;position:absolute;top:-6px;right:-6px}
+.code-wrap{position:relative}
+
+.result-section{background:var(--card);border-radius:var(--radius);padding:22px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.result-section h3{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+
+.trait-tags{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.trait-tag{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;color:white}
+
+.job-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.job-item{padding:12px 14px;background:var(--bg);border-radius:11px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;border:2px solid transparent}
+.job-item.selected{border-color:var(--I);background:#EEF6FF;font-weight:700}
+.job-item .ji{font-size:16px}
+
+.score-bars{display:flex;flex-direction:column;gap:10px}
+.sbar-row{display:flex;align-items:center;gap:10px}
+.sbar-label{width:58px;font-size:13px;font-weight:700;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.sbar-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
+.sbar-track{flex:1;height:22px;background:var(--border);border-radius:11px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:11px;transition:width .8s ease}
+.sbar-val{width:32px;text-align:right;font-size:14px;font-weight:700}
+
+.shape-msg{border-left:4px solid;padding:14px 16px;border-radius:0 12px 12px 0;margin-bottom:10px;background:var(--bg)}
+.shape-msg p{font-size:14px;line-height:1.8;color:var(--text)}
+.shape-msg strong{font-size:16px;font-weight:700;display:block;margin-bottom:6px}
+
+/* === REFLECTION === */
+.agree-row{display:flex;gap:10px;margin:14px 0}
+.agree-btn{flex:1;padding:18px 10px;border-radius:14px;border:2.5px solid var(--border);background:var(--bg);font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .2s;text-align:center}
+.agree-btn.sel{background:var(--text);color:white;border-color:var(--text)}
+.ref-textarea{width:100%;min-height:90px;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:var(--font);resize:none;outline:none;transition:border-color .2s;margin-top:8px;background:var(--bg)}
+.ref-textarea:focus{border-color:var(--I);background:white}
+.job-pick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.job-pick-label{display:flex;align-items:center;gap:8px;padding:13px 14px;background:var(--bg);border-radius:12px;border:2px solid var(--border);cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;user-select:none}
+.job-pick-label.sel{border-color:var(--I);background:#EEF6FF;font-weight:700}
+.job-pick-label input{display:none}
+.job-pick-label .jpcheck{font-size:16px;color:var(--muted);flex-shrink:0;width:20px;text-align:center;transition:all .2s}
+.job-pick-label.sel .jpcheck{color:var(--I)}
+.custom-job-input{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:var(--font);outline:none;background:var(--bg);margin-top:8px;transition:border-color .2s}
+.custom-job-input:focus{border-color:var(--I);background:white}
+
+/* === DOWNLOAD === */
+.dl-section{background:linear-gradient(135deg,#4A90E2,#764ba2);border-radius:var(--radius);padding:26px;text-align:center;color:white;margin:20px 0}
+.dl-section h3{font-size:19px;font-weight:900;margin-bottom:8px}
+.dl-section p{font-size:14px;opacity:.88;margin-bottom:18px;line-height:1.7}
+.btn-dl{background:white;color:#4A90E2;border:none;padding:16px 40px;border-radius:14px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.btn-dl:active{transform:scale(.97)}
+.btn-dl.loading{opacity:.7;pointer-events:none}
+
+/* === DOWNLOAD CARD === */
+#dl-card{background:white;width:680px;font-family:'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;padding:0;border-radius:16px;overflow:hidden;position:fixed;left:-9999px;top:0;z-index:-1}
+.dlc-header{background:linear-gradient(135deg,#4A90E2,#764ba2);padding:22px 24px;color:white;text-align:center}
+.dlc-header .activity{font-size:12px;opacity:.8;margin-bottom:4px}
+.dlc-header h2{font-size:20px;font-weight:900}
+.dlc-header .dlc-name{font-size:14px;opacity:.9;margin-top:4px}
+.dlc-body{padding:20px 22px}
+.dlc-code-row{display:flex;justify-content:center;gap:12px;margin:16px 0}
+.dlc-badge{width:70px;height:70px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-weight:900}
+.dlc-badge .dl{font-size:30px;line-height:1}
+.dlc-badge .dn{font-size:10px;margin-top:2px}
+.dlc-chart-wrap{display:flex;justify-content:center;margin:14px 0}
+.dlc-desc{font-size:13px;line-height:1.7;color:#333;padding:14px;background:#f8f9ff;border-radius:12px;margin:12px 0}
+.dlc-traits{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.dlc-trait{padding:5px 12px;border-radius:16px;font-size:12px;font-weight:600;color:white}
+.dlc-jobs-title{font-size:13px;font-weight:700;margin:12px 0 8px;color:#444}
+.dlc-jobs{display:flex;flex-wrap:wrap;gap:7px}
+.dlc-job{padding:6px 12px;background:#f0f4ff;border-radius:8px;font-size:12px;font-weight:600;color:#4A90E2}
+.dlc-reflection{background:#fffbf0;border-radius:12px;padding:14px;margin-top:14px;border:1.5px solid #FFE082}
+.dlc-reflection h4{font-size:13px;font-weight:700;margin-bottom:8px;color:#444}
+.dlc-reflection p{font-size:13px;color:#555;line-height:1.6}
+.dlc-footer{text-align:center;font-size:11px;color:#aaa;padding:12px 22px;border-top:1px solid #eee;margin-top:4px}
+
+canvas{display:block}
+
+@media(min-width:600px){
+  body{font-size:17px}
+  .screen{padding:24px 32px}
+  .scale-btn .sl{font-size:10.5px}
+}
+@media(max-width:400px){
+  .scale-btn .sn{font-size:17px}
+  .scale-btn .sl{font-size:8.5px;display:none}
+  .scale-btn .sn:after{display:block;font-size:8px;font-weight:400;margin-top:2px}
+}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="screen-start" class="screen active">
+  <div class="start-hero">
+    <div class="start-icon">🔍</div>
+    <h1>나의 흥미 유형 찾기</h1>
+    <p>홀랜드 흥미 유형 검사를 통해<br>나에게 맞는 직업 흥미 유형을 알아봐요!</p>
+  </div>
+  <div class="info-card">
+    <h3>✏️ 이름을 입력하세요</h3>
+    <input type="text" id="student-name" class="name-input" placeholder="예) 김진로" maxlength="20">
+  </div>
+  <div class="info-card">
+    <h3>📋 검사 안내</h3>
+    <div class="info-row"><div class="dot"></div><span>총 <b>48문항</b> (6가지 유형 × 8문항)</span></div>
+    <div class="info-row"><div class="dot"></div><span>점수: 매우 그렇다 <b>5점</b> ~ 전혀 그렇지 않다 <b>1점</b></span></div>
+    <div class="info-row"><div class="dot"></div><span>솔직하게 응답할수록 정확한 결과가 나와요</span></div>
+    <div class="type-grid" style="margin-top:14px">
+      <div class="type-chip" style="background:var(--R)">R<small>실재형</small></div>
+      <div class="type-chip" style="background:var(--I)">I<small>탐구형</small></div>
+      <div class="type-chip" style="background:var(--A)">A<small>예술형</small></div>
+      <div class="type-chip" style="background:var(--S)">S<small>사회형</small></div>
+      <div class="type-chip" style="background:var(--E)">E<small>기업형</small></div>
+      <div class="type-chip" style="background:var(--C)">C<small>관습형</small></div>
+    </div>
+  </div>
+  <button class="btn btn-start" onclick="startSurvey()">검사 시작하기 →</button>
+  <div style="height:24px"></div>
+</div>
+
+<!-- SURVEY SCREEN -->
+<div id="screen-survey" class="screen">
+  <div class="progress-bar">
+    <div class="sec-dots" id="sec-dots"></div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+    <div class="progress-info">
+      <span id="prog-label"></span>
+      <span id="prog-pct"></span>
+    </div>
+  </div>
+  <div id="survey-content"></div>
+  <div id="survey-error" class="error-msg">⚠️ 모든 문항에 답해 주세요!</div>
+  <div class="nav-btns">
+    <button class="btn btn-back" id="btn-prev" onclick="prevSection()">← 이전</button>
+    <button class="btn btn-main" id="btn-next" onclick="nextSection()">다음 →</button>
+  </div>
+</div>
+
+<!-- TIEBREAK SCREEN -->
+<div id="screen-tiebreak" class="screen">
+  <div class="tie-hero">
+    <div style="font-size:52px">⚖️</div>
+    <h2>점수가 같아요!</h2>
+    <p>더 자세히 알아보기 위해<br>추가 질문에 답해 주세요</p>
+  </div>
+  <div class="tie-progress" id="tie-progress"></div>
+  <div id="tiebreak-content"></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" class="screen">
+  <div id="result-main"></div>
+  <div id="dl-card"></div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const TYPES = ['R','I','A','S','E','C'];
+const TYPE_NAMES = {R:'실재형',I:'탐구형',A:'예술형',S:'사회형',E:'기업형',C:'관습형'};
+const TYPE_COLORS = {R:'#E8603C',I:'#3A80C8',A:'#C044A0',S:'#28B068',E:'#E8941A',C:'#6B50A0'};
+const TYPE_EMOJIS = {R:'🔧',I:'🔬',A:'🎨',S:'🤝',E:'🚀',C:'📋'};
+const TYPE_DESC = {
+  R:'신체적 활동을 선호하는 유형',I:'탐구심이 강한 유형',A:'상상력이 풍부한 예술가 유형',
+  S:'친절하고 이해심이 많은 유형',E:'리더십이 뛰어난 유형',C:'신중하고 책임감이 강한 유형'
+};
+
+const QUESTIONS = [
+  {type:'R',items:['정밀한 기계를 조립하는 것을 좋아한다.','기계나 도구를 이용하여 제품을 제작하는 것을 좋아한다.','땅의 모형과 넓이를 측정하는 것을 좋아한다.','고장 난 전기 제품을 수리하는 것을 좋아한다.','물건이나 기계를 잘 작동시킨다.','땀을 흘리는 운동을 좋아한다.','손으로 물건을 만드는 일을 하고 싶다.','기술자로서 재능을 발휘하는 직업을 갖고 싶다.']},
+  {type:'I',items:['동물과 식물의 형태를 연구하고 원리를 아는 일이 즐겁다.','수학의 원리를 증명하는 일에 흥미가 있다.','실험실에서 실험하며 지식을 터득하는 일이 즐겁다.','사회적인 문제나 현상을 연구하는 일에 흥미가 있다.','특정 학문 영역에서 권위를 가진 사람이 되고 싶다.','오랫동안 전문 교육을 받아야 하는 직업을 갖고 싶다.','새로운 것을 만들어 내는 일에 집중하는 직업을 갖고 싶다.','인류의 문제를 해결하는 데 관심이 있다.']},
+  {type:'A',items:['드라마 작가가 되어 글을 쓰고 싶다.','교향악단을 지휘하는 상상이 즐겁다.','시각적으로 아름다운 것에 눈이 끌린다.','그림을 그리고 디자인하는 일이 즐겁다.','새로운 것을 만들어 내고 남보다 독특함을 인정받는 것이 즐겁다.','나의 예술적 재능을 발휘할 수 있는 일을 하고 싶다.','창의적 재능을 발휘하는 직업을 갖고 싶다.','세상과 조화롭게 살면서 아름다움을 제공하는 일을 하고 싶다.']},
+  {type:'S',items:['가르치는 일을 좋아한다.','친구들에게 쉽게 설명하여 가르칠 수 있다.','친구들과 어울려 지내는 것이 좋다.','자원봉사를 하는 일이 즐겁다.','다른 사람을 가르치고, 타인의 건강을 돌보는 일에 관심이 있다.','아이디어나 사물보다는 사람과 함께 있는 것이 즐겁다.','협동심이 강한 집단의 구성원이 되는 것이 좋다.','여러 사람들을 사귀면서 일할 수 있으면 좋겠다.']},
+  {type:'E',items:['높은 지위를 얻을 가능성이 있는 직업을 갖고 싶다.','다른 사람을 관리, 지휘할 수 있는 직업을 갖고 싶다.','노동자들을 관리하는 책임자가 되고 싶다.','다른 사람을 말로 잘 설득하는 일이 즐겁다.','현장을 취재하는 기자로 일하고 싶다.','도전과 모험을 통해 보상을 받는 일이 즐겁다.','명예, 직위, 상여금을 얻고자 동료들과 경쟁하는 직업을 갖고 싶다.','달러를 사고파는 외환 딜러가 되고 싶다.']},
+  {type:'C',items:['용돈을 잘 관리하고, 수입과 지출을 정리하는 일이 즐겁다.','은행에서 현금을 출납하는 업무를 하고 싶다.','필요한 자료를 찾아서 잘 정리하고 모아 둔다.','안정되고 편안함이 강조되는 일을 하고 싶다.','정해진 방법에 따라 일을 처리하는 직업을 갖고 싶다.','깨끗하고 조명이 잘 되어 있는 곳에서 일하고 싶다.','일 처리가 체계적으로 이루어지는 곳에서 일하고 싶다.','도서를 분류하고 정리하는 사서 일에 관심이 있다.']}
+];
+
+const SCALE_LABELS = ['전혀\n그렇지\n않다','그렇지\n않다','보통\n이다','그렇다','매우\n그렇다'];
+
+const CODE_DATA = {
+  'RI':{title:'실재-탐구형',desc:'기계나 도구를 직접 다루면서 동시에 그 원리를 깊이 탐구하는 것을 즐겨요. 구체적인 문제를 논리적으로 해결하는 능력이 뛰어나며, 기술과 과학이 만나는 분야에서 두각을 나타낼 수 있어요.',traits:['실천적','분석적','논리적','꼼꼼함','탐구심'],jobs:['기계공학자','로봇 개발자','항공우주 엔지니어','전기전자 연구원','자동차 엔지니어','수의사','농업기술 연구원']},
+  'RA':{title:'실재-예술형',desc:'손으로 직접 만들면서 창의적인 아이디어를 실물로 표현하는 것에 큰 보람을 느껴요. 기능과 아름다움을 동시에 추구하며, 실용적이면서도 감각적인 결과물을 만들어내는 능력이 있어요.',traits:['창의적','손재주','독창적','심미적','활동적'],jobs:['건축가','제품 디자이너','공예가','게임 그래픽 개발자','사진작가','패션 디자이너','무대 기술자']},
+  'RS':{title:'실재-사회형',desc:'직접적이고 실질적인 방법으로 사람들을 도울 때 가장 큰 보람을 느껴요. 야외 활동이나 신체를 활용하는 일을 하면서 사람들과 함께하는 것을 즐기는 유형이에요.',traits:['친절함','활동적','실용적','봉사심','협동적'],jobs:['체육 교사','물리치료사','소방관','응급 구조사','스포츠 트레이너','직업 훈련 교사','간호사']},
+  'RE':{title:'실재-기업형',desc:'기술적 능력을 바탕으로 팀을 이끌거나 현장에서 목표를 달성하는 것에 에너지를 느껴요. 경쟁적인 환경에서 뚜렷한 성과를 만들어 내는 것을 좋아해요.',traits:['추진력','기술력','경쟁적','목표지향','리더십'],jobs:['건설 현장 감독','기술 창업가','플랜트 엔지니어','스포츠 에이전트','제조업 경영자','군인/장교','건설사 대표']},
+  'RC':{title:'실재-관습형',desc:'정해진 절차에 따라 정확하게 기술 작업을 수행하는 것을 좋아해요. 실수 없이 완성도 높은 결과물을 만드는 데 큰 만족감을 느끼는 유형이에요.',traits:['정밀함','꼼꼼함','체계적','성실성','기술력'],jobs:['측량사','항공 정비사','기술사','품질 관리 기사','운전기사','조리사','도면 기술자']},
+  'IA':{title:'탐구-예술형',desc:'기존의 틀에 얽매이지 않고 새로운 원리나 아름다운 것을 창조하는 과정을 즐겨요. 탐구형의 분석력과 예술형의 상상력이 합쳐져 독창적인 연구나 창작 활동에서 두각을 나타내요.',traits:['창의적','분석적','독창적','탐구심','감수성'],jobs:['건축가','UX 연구원','과학 일러스트레이터','게임 기획자','디지털 아티스트','음악 이론가','광고 기획 연구원']},
+  'IS':{title:'탐구-사회형',desc:'사람들의 심리, 건강, 사회 문제 등에 관심이 많고 이를 학문적으로 탐구하는 것을 즐겨요. 전문 지식으로 사람들에게 실질적인 도움을 주는 것에 큰 보람을 느껴요.',traits:['분석적','공감적','탐구심','학문적','봉사심'],jobs:['의사','심리상담사','역학자','특수교육 전문가','사회복지 연구원','영양사','교육 연구원']},
+  'IE':{title:'탐구-기업형',desc:'깊은 전문성을 바탕으로 새로운 사업을 구상하거나 연구 프로젝트를 이끌어 가는 것을 즐겨요. 혁신적인 아이디어로 세상을 바꾸는 것에 강한 열망이 있어요.',traits:['분석적','추진력','전략적','독립적','혁신적'],jobs:['스타트업 대표','연구소 소장','전략 컨설턴트','법의학 전문가','과학기술 정책가','기술 특허 전문가','IT 기획자']},
+  'IC':{title:'탐구-관습형',desc:'방대한 데이터나 정보를 체계적으로 수집·분류·분석하는 것을 즐겨요. 논리적이고 정확한 결과를 도출하는 것에 큰 만족감을 느끼는 유형이에요.',traits:['분석적','꼼꼼함','논리적','체계적','탐구심'],jobs:['데이터 과학자','통계학자','의료 기록사','빅데이터 전문가','법의학 분석가','기록학자','회계감사원']},
+  'AS':{title:'예술-사회형',desc:'음악, 미술, 글쓰기 등 예술적 활동을 통해 사람들과 소통하고 감동을 주는 것에 큰 보람을 느껴요. 사람들의 감정을 이해하고 예술로 표현하는 능력이 뛰어나요.',traits:['창의적','공감적','표현력','친화력','감수성'],jobs:['예술치료사','문화 기획자','방송 작가','음악 교사','독서 치료사','사회복지 예술가','작가']},
+  'AE':{title:'예술-기업형',desc:'창의적인 아이디어를 실제 사업이나 프로젝트로 실현하는 것에 에너지를 느껴요. 패션, 미디어, 콘텐츠 등 창의 산업 분야에서 두각을 나타낼 수 있어요.',traits:['창의적','열정적','독창적','추진력','트렌드 감각'],jobs:['패션 디자이너','크리에이티브 디렉터','유튜버/콘텐츠 크리에이터','영화 감독','공연 기획자','브랜드 마케터','뮤직 프로듀서']},
+  'AC':{title:'예술-관습형',desc:'창의적인 아이디어를 정확하고 완벽하게 구현하는 과정에서 만족감을 느껴요. 세밀한 작업과 높은 완성도에 대한 기준이 뚜렷한 유형이에요.',traits:['창의적','꼼꼼함','심미적','정확성','완성도'],jobs:['편집 디자이너','사진작가','인테리어 디자이너','영상 편집자','캘리그래퍼','도예가','악보 제작자']},
+  'SE':{title:'사회-기업형',desc:'사람들을 도우면서 동시에 조직을 이끄는 역할을 즐겨요. 다양한 사람들을 설득하고 동기를 부여하는 능력이 뛰어난 리더형 유형이에요.',traits:['리더십','공감적','설득력','친화력','열정적'],jobs:['NGO 활동가','사회 기업가','학교 교장','HR 매니저','정치인','이벤트 기획자','교육 행정가']},
+  'SC':{title:'사회-관습형',desc:'사람들을 돕는 일을 조직적이고 꼼꼼하게 처리하는 것에 능숙해요. 안정적인 환경에서 사람들과 함께 일하며 신뢰를 쌓는 것을 좋아해요.',traits:['꼼꼼함','봉사심','체계적','신뢰감','친화력'],jobs:['사회복지사','학교 행정관','병원 코디네이터','청소년 상담사','공무원','보육교사','복지관 매니저']},
+  'EC':{title:'기업-관습형',desc:'명확한 목표를 세우고 체계적인 계획으로 달성해 나가는 것을 즐겨요. 조직 관리와 재무 처리 등 실무적인 경영 능력이 뛰어난 유형이에요.',traits:['추진력','체계적','목표지향','꼼꼼함','리더십'],jobs:['경영 컨설턴트','회계사','금융 분석가','세무사','기업 CFO','보험 관리자','공무원']}
+};
+
+const TIEBREAKERS = {
+  'RI':{q:'다음 중 더 나에게 어울리는 것은?',a:{txt:'🔧 기계·도구를 직접 다루며 뭔가를 만들기',t:'R'},b:{txt:'🔬 실험하거나 원리를 탐구하고 연구하기',t:'I'}},
+  'RA':{q:'다음 중 더 하고 싶은 것은?',a:{txt:'🔧 실용적인 물건을 손으로 직접 만들기',t:'R'},b:{txt:'🎨 상상력을 발휘해서 작품을 만들기',t:'A'}},
+  'RS':{q:'어떤 일이 더 즐거울 것 같아요?',a:{txt:'🔧 도구나 기계를 능숙하게 다루는 일',t:'R'},b:{txt:'🤝 여러 사람들과 함께 어울리며 돕는 일',t:'S'}},
+  'RE':{q:'어떤 모습에 더 끌려요?',a:{txt:'🔧 기술 능력으로 전문가에게 인정받기',t:'R'},b:{txt:'🚀 리더로서 팀을 이끌고 목표를 달성하기',t:'E'}},
+  'RC':{q:'어느 쪽이 더 내 스타일이에요?',a:{txt:'🔧 몸으로 직접 만들고 조립하는 일',t:'R'},b:{txt:'📋 데이터·자료를 꼼꼼하게 정리·관리하기',t:'C'}},
+  'IA':{q:'더 끌리는 활동은 무엇인가요?',a:{txt:'🔬 논리적으로 원리를 분석하고 연구하기',t:'I'},b:{txt:'🎨 감각적으로 아름다운 것을 창조하기',t:'A'}},
+  'IS':{q:'어느 쪽이 더 나에게 맞아요?',a:{txt:'🔬 혼자 깊이 연구하고 탐구하기',t:'I'},b:{txt:'🤝 사람들과 소통하면서 도움 주기',t:'S'}},
+  'IE':{q:'더 중요하게 생각하는 것은?',a:{txt:'🔬 한 분야의 깊은 전문 지식 쌓기',t:'I'},b:{txt:'🚀 사람들을 설득하고 이끄는 리더 되기',t:'E'}},
+  'IC':{q:'더 즐거운 활동을 골라요!',a:{txt:'🔬 새롭고 신기한 것을 탐구하고 발견하기',t:'I'},b:{txt:'📋 정보를 체계적으로 정리하고 관리하기',t:'C'}},
+  'AS':{q:'어느 쪽 활동이 더 좋아요?',a:{txt:'🎨 혼자 집중해서 창작 활동하기',t:'A'},b:{txt:'🤝 사람들과 어울리면서 함께하기',t:'S'}},
+  'AE':{q:'어느 쪽 모습에 더 끌려요?',a:{txt:'🎨 자유롭게 창의성을 발휘하는 것',t:'A'},b:{txt:'🚀 목표를 향해 도전하고 성과를 내는 것',t:'E'}},
+  'AC':{q:'더 자연스럽게 할 수 있는 것은?',a:{txt:'🎨 감성적으로 독특하고 개성 있는 것 만들기',t:'A'},b:{txt:'📋 규칙에 따라 꼼꼼하고 정확하게 처리하기',t:'C'}},
+  'SE':{q:'더 보람 있는 일은 어느 쪽인가요?',a:{txt:'🤝 다른 사람을 돕고 봉사하는 일',t:'S'},b:{txt:'🚀 다른 사람을 이끌고 지휘하는 일',t:'E'}},
+  'SC':{q:'더 편하게 할 수 있는 것은?',a:{txt:'🤝 사람들과 대화하며 문제를 해결하기',t:'S'},b:{txt:'📋 자료를 체계적으로 정리하고 관리하기',t:'C'}},
+  'EC':{q:'어느 쪽 모습이 더 내 스타일이에요?',a:{txt:'🚀 새로운 도전에 뛰어들어 성과 내기',t:'E'},b:{txt:'📋 안정적으로 체계를 유지하고 관리하기',t:'C'}}
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  name: '',
+  answers: new Array(48).fill(0),
+  currentSection: 0,
+  scores: {},
+  topCodes: ['',''],
+  tiebreakQueue: [],
+  tiebreakIndex: 0,
+  tiebreakAdjustments: {},
+  refAgree: null,
+  refText: '',
+  pickedJobs: [],
+  customJob: ''
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startSurvey() {
+  const n = document.getElementById('student-name').value.trim();
+  if (!n) {
+    document.getElementById('student-name').classList.add('shake');
+    setTimeout(()=>document.getElementById('student-name').classList.remove('shake'), 500);
+    document.getElementById('student-name').focus();
+    return;
+  }
+  state.name = n;
+  state.currentSection = 0;
+  showScreen('survey');
+  renderSection();
+}
+
+function prevSection() {
+  if (state.currentSection > 0) {
+    state.currentSection--;
+    renderSection();
+    window.scrollTo(0,0);
+  } else {
+    showScreen('start');
+  }
+}
+
+function nextSection() {
+  if (!validateSection()) {
+    const err = document.getElementById('survey-error');
+    err.style.display = 'block';
+    err.classList.add('shake');
+    setTimeout(()=>{err.classList.remove('shake')},500);
+    return;
+  }
+  document.getElementById('survey-error').style.display = 'none';
+  if (state.currentSection < 5) {
+    state.currentSection++;
+    renderSection();
+    window.scrollTo(0,0);
+  } else {
+    processResults();
+  }
+}
+
+function validateSection() {
+  const start = state.currentSection * 8;
+  for (let i = start; i < start + 8; i++) {
+    if (!state.answers[i]) return false;
+  }
+  return true;
+}
+
+// ============================================================
+// SURVEY RENDERING
+// ============================================================
+function renderSection() {
+  const sec = QUESTIONS[state.currentSection];
+  const color = TYPE_COLORS[sec.type];
+  const pct = Math.round((state.currentSection / 6) * 100);
+
+  // dots
+  const dots = document.getElementById('sec-dots');
+  dots.innerHTML = TYPES.map((t,i)=>{
+    let cls = '';
+    if (i < state.currentSection) cls = 'done';
+    else if (i === state.currentSection) cls = 'active';
+    return `<div class="sec-dot ${cls}" style="${i===state.currentSection?'background:'+color:''}"></div>`;
+  }).join('');
+
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-fill').style.background = `linear-gradient(90deg, ${color}, ${color}cc)`;
+  document.getElementById('prog-label').textContent = `${TYPE_EMOJIS[sec.type]} ${TYPE_NAMES[sec.type]}`;
+  document.getElementById('prog-pct').textContent = `${state.currentSection+1}/6 영역`;
+
+  document.getElementById('btn-prev').style.display = state.currentSection === 0 ? 'none' : '';
+  document.getElementById('btn-next').textContent = state.currentSection === 5 ? '결과 보기 →' : '다음 →';
+
+  const start = state.currentSection * 8;
+  let html = `<div class="section-banner" style="background:linear-gradient(135deg,${color},${color}cc)">
+    <div class="badge">${sec.type}</div>
+    <div><h2>${TYPE_NAMES[sec.type]}</h2><p>${TYPE_DESC[sec.type]}</p></div>
+  </div>
+  <div class="q-card">`;
+
+  sec.items.forEach((q, qi) => {
+    const idx = start + qi;
+    const saved = state.answers[idx];
+    html += `<div class="q-item" id="qi-${idx}">
+      <div class="q-text"><span class="q-num">${qi+1}</span>${q}</div>
+      <div class="scale" style="--active-color:${color}">`;
+    for (let v = 1; v <= 5; v++) {
+      const lbl = SCALE_LABELS[v-1].replace(/\n/g,'<br>');
+      html += `<label>
+        <input type="radio" name="q${idx}" value="${v}" ${saved===v?'checked':''} onchange="setAnswer(${idx},${v})">
+        <div class="scale-btn"><span class="sn">${v}</span><span class="sl">${lbl}</span></div>
+      </label>`;
+    }
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  document.getElementById('survey-content').innerHTML = html;
+}
+
+function setAnswer(idx, val) {
+  state.answers[idx] = val;
+  const err = document.getElementById('survey-error');
+  if (err.style.display !== 'none') {
+    if (validateSection()) err.style.display = 'none';
+  }
+}
+
+// ============================================================
+// SCORE CALCULATION & TIEBREAK
+// ============================================================
+function processResults() {
+  // calculate scores
+  TYPES.forEach((t, ti) => {
+    let s = 0;
+    for (let q = 0; q < 8; q++) s += state.answers[ti*8+q];
+    state.scores[t] = s;
+  });
+
+  const tq = findTiebreaks();
+  state.tiebreakQueue = tq;
+  state.tiebreakIndex = 0;
+
+  if (tq.length > 0) {
+    showScreen('tiebreak');
+    renderTiebreak();
+  } else {
+    determineTopCodes();
+    showScreen('result');
+    renderResult();
+  }
+}
+
+function findTiebreaks() {
+  const sorted = [...TYPES].sort((a,b)=>state.scores[b]-state.scores[a]);
+  const q = [];
+  if (state.scores[sorted[0]] === state.scores[sorted[1]]) {
+    q.push([sorted[0], sorted[1]]);
+  } else if (state.scores[sorted[1]] === state.scores[sorted[2]]) {
+    q.push([sorted[1], sorted[2]]);
+  }
+  return q;
+}
+
+function renderTiebreak() {
+  if (state.tiebreakIndex >= state.tiebreakQueue.length) {
+    determineTopCodes();
+    showScreen('result');
+    renderResult();
+    return;
+  }
+  const [t1, t2] = state.tiebreakQueue[state.tiebreakIndex];
+  const key = getPairKey(t1, t2);
+  const tb = TIEBREAKERS[key];
+  const total = state.tiebreakQueue.length;
+  const curr = state.tiebreakIndex + 1;
+
+  document.getElementById('tie-progress').textContent = `질문 ${curr} / ${total}`;
+
+  const swapped = key !== t1+t2;
+  const optA = swapped ? tb.b : tb.a;
+  const optB = swapped ? tb.a : tb.b;
+
+  document.getElementById('tiebreak-content').innerHTML = `
+    <div class="tie-card">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:6px;text-align:center">
+        ${TYPE_EMOJIS[t1]} <b style="color:${TYPE_COLORS[t1]}">${TYPE_NAMES[t1]}</b>
+        &nbsp;vs&nbsp;
+        ${TYPE_EMOJIS[t2]} <b style="color:${TYPE_COLORS[t2]}">${TYPE_NAMES[t2]}</b>
+        (현재 점수 동점: 각 ${state.scores[t1]}점)
+      </p>
+      <p class="tie-q">${tb.q}</p>
+      <div class="tie-options">
+        <button class="tie-btn" onclick="selectTiebreak('${optA.t}','${optB.t}')">
+          <div class="tie-icon" style="background:${TYPE_COLORS[optA.t]}22;color:${TYPE_COLORS[optA.t]}">${TYPE_EMOJIS[optA.t]}</div>
+          <span>${optA.txt}</span>
+        </button>
+        <button class="tie-btn" onclick="selectTiebreak('${optB.t}','${optA.t}')">
+          <div class="tie-icon" style="background:${TYPE_COLORS[optB.t]}22;color:${TYPE_COLORS[optB.t]}">${TYPE_EMOJIS[optB.t]}</div>
+          <span>${optB.txt}</span>
+        </button>
+        <button class="tie-btn" onclick="selectTiebreak(null,null)" style="justify-content:center;font-size:14px;color:var(--muted);padding:14px">
+          🤷 둘 다 비슷해요 (공동으로 처리)
+        </button>
+      </div>
+    </div>`;
+}
+
+function selectTiebreak(winner, loser) {
+  if (winner) {
+    state.tiebreakAdjustments[winner] = (state.tiebreakAdjustments[winner]||0) + 0.5;
+  }
+  state.tiebreakIndex++;
+  if (state.tiebreakIndex >= state.tiebreakQueue.length) {
+    determineTopCodes();
+    showScreen('result');
+    renderResult();
+  } else {
+    renderTiebreak();
+  }
+}
+
+function getPairKey(t1, t2) {
+  const order = ['R','I','A','S','E','C'];
+  return order.indexOf(t1) < order.indexOf(t2) ? t1+t2 : t2+t1;
+}
+
+function determineTopCodes() {
+  const adjusted = {};
+  TYPES.forEach(t => adjusted[t] = state.scores[t] + (state.tiebreakAdjustments[t]||0));
+  const sorted = [...TYPES].sort((a,b)=>adjusted[b]-adjusted[a]);
+  state.topCodes = [sorted[0], sorted[1]];
+}
+
+function lookupCode(c1, c2) {
+  const key = getPairKey(c1, c2);
+  return CODE_DATA[key] || null;
+}
+
+// ============================================================
+// SHAPE INTERPRETATION
+// ============================================================
+function getShapeInfo() {
+  const vals = TYPES.map(t=>state.scores[t]);
+  const avg = vals.reduce((a,b)=>a+b,0) / 6;
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const big = avg >= 24;
+  const skewed = (max - min) >= 15;
+
+  if (big && skewed) return {
+    shape:'크고 한쪽으로 기운 모양 📈', color:'#28B068',
+    msgs:['특정 분야에 뚜렷한 관심이 있어요!','흥미가 잘 발달되어 있고 안정적이에요.','자신의 성격과 관심 분야가 잘 조화를 이루고 있어요.','지금의 흥미를 살려 진로를 적극적으로 탐색해 봐요! 💪']
+  };
+  if (big && !skewed) return {
+    shape:'크고 정육각형에 가까운 모양 🔵', color:'#3A80C8',
+    msgs:['다양한 분야에 폭넓은 관심이 있어요!','여러 가지 일에 고르게 흥미를 느끼는 편이에요.','흥미 분야를 조금 더 좁혀 볼 필요가 있어요.','다양한 진로 체험 활동을 통해 가장 끌리는 것을 찾아봐요! 🌟']
+  };
+  if (!big && skewed) return {
+    shape:'작고 한쪽으로 기운 모양 📉', color:'#E8941A',
+    msgs:['특정 분야에 관심은 있지만 아직 발달 중이에요.','관심 분야를 더 적극적으로 탐색해 보면 좋겠어요.','다양한 경험을 통해 흥미를 키울 수 있어요.','관심 분야의 책이나 활동을 찾아보는 것을 추천해요! 📚']
+  };
+  return {
+    shape:'작고 정육각형에 가까운 모양 ⭕', color:'#C044A0',
+    msgs:['아직 뚜렷한 관심 분야를 찾는 중이에요.','다양한 활동을 시도하며 흥미를 발견해 보세요.','자기 자신에 대해 더 알아갈 기회를 만들어요.','이 시기에 여러 경험을 쌓는 것이 가장 중요해요! 🌱']
+  };
+}
+
+// ============================================================
+// CANVAS RADAR CHART
+// ============================================================
+function drawRadar(canvas, scores, size) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const cx = size/2, cy = size/2;
+  const maxR = size * 0.36;
+  const order = ['R','I','A','S','E','C'];
+  const angles = order.map((_,i) => -Math.PI/2 + (Math.PI*2/6)*i);
+
+  // bg circles & grid lines
+  for (let lv=1; lv<=5; lv++) {
+    const r = maxR * (lv/5);
+    ctx.beginPath();
+    angles.forEach((a,i)=>{
+      const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = lv===5?'#C8D4E4':'#E2EAF4';
+    ctx.lineWidth = lv===5?1.5:1;
+    ctx.stroke();
+    // level labels
+    if (lv===5||lv===2||lv===4) {
+      ctx.fillStyle='#A8B8CC';ctx.font=`${size*0.028}px Noto Sans KR`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(lv*8, cx, cy-r+size*0.026);
+    }
+  }
+
+  // axis lines
+  angles.forEach(a=>{
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+maxR*Math.cos(a),cy+maxR*Math.sin(a));
+    ctx.strokeStyle='#E2EAF4';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // data polygon
+  const pts = order.map((t,i)=>{
+    const r = maxR*(scores[t]/40);
+    return {x:cx+r*Math.cos(angles[i]),y:cy+r*Math.sin(angles[i])};
+  });
+  ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.closePath();
+  ctx.fillStyle='rgba(58,128,200,0.18)';ctx.fill();
+  ctx.strokeStyle='#3A80C8';ctx.lineWidth=2.5;ctx.stroke();
+
+  // data points
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle=TYPE_COLORS[order[i]];ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+  });
+
+  // labels
+  const lR = maxR + size*0.1;
+  order.forEach((t,i)=>{
+    const x=cx+lR*Math.cos(angles[i]), y=cy+lR*Math.sin(angles[i]);
+    ctx.fillStyle=TYPE_COLORS[t];
+    ctx.font=`900 ${size*0.038}px Noto Sans KR`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(t, x, y-size*0.022);
+    ctx.fillStyle='#6678A0';
+    ctx.font=`${size*0.028}px Noto Sans KR`;
+    ctx.fillText(TYPE_NAMES[t], x, y+size*0.022);
+  });
+
+  // center score label
+  ctx.fillStyle='#8892A8';ctx.font=`${size*0.03}px Noto Sans KR`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('점수(만점 40)', cx, cy+maxR+size*0.07);
+}
+
+// ============================================================
+// RESULT RENDERING
+// ============================================================
+function renderResult() {
+  const [c1, c2] = state.topCodes;
+  const code = lookupCode(c1, c2);
+  const shape = getShapeInfo();
+  const jobs = code ? code.jobs : [];
+  const mainEl = document.getElementById('result-main');
+
+  // score bars
+  const sortedTypes = [...TYPES].sort((a,b)=>state.scores[b]-state.scores[a]);
+  let scoreBarsHtml = '<div class="score-bars">';
+  sortedTypes.forEach(t=>{
+    const pct = (state.scores[t]/40)*100;
+    scoreBarsHtml += `<div class="sbar-row">
+      <div class="sbar-label"><div class="sbar-dot" style="background:${TYPE_COLORS[t]}"></div>${TYPE_EMOJIS[t]} ${TYPE_NAMES[t]}</div>
+      <div class="sbar-track"><div class="sbar-fill" style="width:${pct}%;background:${TYPE_COLORS[t]}"></div></div>
+      <div class="sbar-val">${state.scores[t]}</div>
+    </div>`;
+  });
+  scoreBarsHtml += '</div>';
+
+  // trait tags
+  const traits = code ? code.traits : [];
+  const traitHtml = traits.map(tr=>`<span class="trait-tag" style="background:${TYPE_COLORS[c1]}">${tr}</span>`).join('');
+
+  // jobs for checkbox - use div + index to avoid label/checkbox double-fire
+  const jobPickHtml = jobs.map((j,ji)=>`
+    <div class="job-pick-label" id="jpl-${ji}" onclick="toggleJobPick(${ji},'${j.replace(/'/g,"\\'")}')">
+      <span class="jpcheck" id="jpchk-${ji}">○</span>
+      <span>${j}</span>
+    </div>`).join('');
+
+  mainEl.innerHTML = `
+    <div class="result-top">
+      <div class="result-title">${state.name}의 직업 흥미 유형</div>
+      <div class="result-sub">홀랜드 흥미 유형 검사 결과</div>
+      <div class="code-row">
+        <div class="code-wrap">
+          <div class="code-badge" style="background:${TYPE_COLORS[c1]}">${c1 ? `<span class="cl">${c1}</span><span class="cn">${TYPE_NAMES[c1]}</span>` : ''}</div>
+          <span class="rank-badge" style="background:#FFB300">1위</span>
+        </div>
+        <div class="code-plus">+</div>
+        <div class="code-wrap">
+          <div class="code-badge" style="background:${TYPE_COLORS[c2]}">${c2 ? `<span class="cl">${c2}</span><span class="cn">${TYPE_NAMES[c2]}</span>` : ''}</div>
+          <span class="rank-badge" style="background:#78909C">2위</span>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">나의 대표 코드: <b style="color:${TYPE_COLORS[c1]};font-size:16px">${c1}${c2}</b> (${code ? code.title : c1+'+'+c2})</div>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:#EEF3FF">📊</div>6가지 유형별 점수</h3>
+      ${scoreBarsHtml}
+    </div>
+
+    <div class="result-section">
+      <div id="radar-wrap" style="display:flex;justify-content:center;padding:8px 0">
+        <canvas id="radar-canvas"></canvas>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:${TYPE_COLORS[c1]}22">${TYPE_EMOJIS[c1]}</div>${code ? code.title : c1+c2+'형'} 유형 특성</h3>
+      <p style="font-size:15px;line-height:1.8;color:var(--text)">${code ? code.desc : ''}</p>
+      <div class="trait-tags" style="margin-top:14px">${traitHtml}</div>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:#F0F9FF">🏢</div>추천 직업</h3>
+      <div class="job-grid">
+        ${jobs.map(j=>`<div class="job-item"><span class="ji">✦</span>${j}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:${shape.color}22">🔷</div>나의 흥미 육각형 모양 해석</h3>
+      <div class="shape-msg" style="border-color:${shape.color}">
+        <strong style="color:${shape.color}">${shape.shape}</strong>
+        ${shape.msgs.map(m=>`<p>• ${m}</p>`).join('')}
+      </div>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:#FFF8E1">💭</div>나의 생각과 결과 비교하기</h3>
+      <p style="font-size:15px;font-weight:600;margin-bottom:4px">검사 결과가 나에 대한 설명과 얼마나 맞는 것 같아요?</p>
+      <div class="agree-row">
+        <button class="agree-btn" id="ab-yes" onclick="setAgree('yes')">😊<br><span style="font-size:13px">잘 맞아요</span></button>
+        <button class="agree-btn" id="ab-maybe" onclick="setAgree('maybe')">🤔<br><span style="font-size:13px">어느 정도요</span></button>
+        <button class="agree-btn" id="ab-no" onclick="setAgree('no')">😕<br><span style="font-size:13px">잘 안 맞아요</span></button>
+      </div>
+      <p style="font-size:14px;font-weight:600;margin-top:14px">결과에 대한 나의 생각을 자유롭게 써 봐요</p>
+      <textarea class="ref-textarea" id="ref-text" placeholder="예) 탐구형 점수가 높게 나온 것은 맞는 것 같아요. 평소에 실험이나 수학 문제 푸는 것을 좋아하거든요..." oninput="state.refText=this.value"></textarea>
+    </div>
+
+    <div class="result-section">
+      <h3><div class="section-icon" style="background:#E8F5E9">🎯</div>관심 있는 직업 골라보기</h3>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:4px">추천 직업 중 관심 있는 직업을 선택하세요 (중복 가능)</p>
+      <div class="job-pick-grid">${jobPickHtml}</div>
+      <p style="font-size:14px;color:var(--muted);margin-top:12px">또는 직접 써 봐요</p>
+      <input type="text" class="custom-job-input" id="custom-job" placeholder="관심 있는 직업을 직접 입력..." oninput="state.customJob=this.value">
+    </div>
+
+    <div class="dl-section">
+      <h3>📥 결과 저장하기</h3>
+      <p>결과 이미지를 저장한 후<br><b>Google Classroom</b>에 과제로 제출하세요!</p>
+      <button class="btn-dl" id="dl-btn" onclick="downloadResult()">📷 결과 이미지 저장</button>
+    </div>
+    <div style="height:20px"></div>
+  `;
+
+  // draw radar
+  setTimeout(()=>{
+    const canvas = document.getElementById('radar-canvas');
+    if (canvas) {
+      const w = Math.min(340, window.innerWidth - 80);
+      drawRadar(canvas, state.scores, w);
+    }
+  }, 100);
+}
+
+function setAgree(val) {
+  state.refAgree = val;
+  ['yes','maybe','no'].forEach(v=>{
+    document.getElementById('ab-'+v).classList.toggle('sel', v===val);
+  });
+}
+
+function toggleJobPick(ji, job) {
+  const el = document.getElementById('jpl-'+ji);
+  const chk = document.getElementById('jpchk-'+ji);
+  if (!el) return;
+  const idx = state.pickedJobs.indexOf(job);
+  if (idx >= 0) {
+    state.pickedJobs.splice(idx,1);
+    el.classList.remove('sel');
+    if(chk) chk.textContent = '○';
+  } else {
+    state.pickedJobs.push(job);
+    el.classList.add('sel');
+    if(chk) chk.textContent = '✓';
+  }
+}
+
+// ============================================================
+// DOWNLOAD
+// ============================================================
+function downloadResult() {
+  const btn = document.getElementById('dl-btn');
+  btn.textContent = '⏳ 이미지 준비 중...';
+  btn.classList.add('loading');
+
+  const [c1, c2] = state.topCodes;
+  const code = lookupCode(c1, c2);
+  const shape = getShapeInfo();
+  const dlCard = document.getElementById('dl-card');
+
+  const agreeText = {yes:'잘 맞아요', maybe:'어느 정도 맞아요', no:'잘 안 맞아요'}[state.refAgree] || '미응답';
+  const allJobs = [...state.pickedJobs, state.customJob].filter(Boolean).join(', ') || '미선택';
+  const refNote = state.refText || '(작성 없음)';
+  const traits = code ? code.traits : [];
+  const jobs = code ? code.jobs : [];
+
+  // Build card content (card is already off-screen via CSS, never display:none)
+  dlCard.innerHTML = `
+    <div class="dlc-header">
+      <div class="activity">흥미 유형 검사 (홀랜드) 결과</div>
+      <h2>나의 직업 흥미 유형: ${c1}${c2}형</h2>
+      <div class="dlc-name">이름: ${state.name} | ${new Date().toLocaleDateString('ko-KR')}</div>
+    </div>
+    <div class="dlc-body">
+      <div class="dlc-code-row">
+        <div class="dlc-badge" style="background:${TYPE_COLORS[c1]}"><span class="dl">${c1}</span><span class="dn">${TYPE_NAMES[c1]}</span></div>
+        <span style="font-size:20px;font-weight:900;color:#ccc">+</span>
+        <div class="dlc-badge" style="background:${TYPE_COLORS[c2]}"><span class="dl">${c2}</span><span class="dn">${TYPE_NAMES[c2]}</span></div>
+      </div>
+      <div style="text-align:center;font-size:13px;font-weight:700;color:${TYPE_COLORS[c1]};margin-bottom:14px">${code?code.title:c1+c2+'형'}</div>
+      <div class="dlc-chart-wrap"><canvas id="dl-radar"></canvas></div>
+      <div class="dlc-desc">${code?code.desc:''}</div>
+      <div class="dlc-traits">${traits.map(tr=>`<span class="dlc-trait" style="background:${TYPE_COLORS[c1]}">${tr}</span>`).join('')}</div>
+      <div class="dlc-jobs-title">추천 직업 목록</div>
+      <div class="dlc-jobs">${jobs.map(j=>`<span class="dlc-job">${j}</span>`).join('')}</div>
+      <div style="margin-top:12px;font-size:12px;font-weight:700;color:#666">나의 흥미 육각형 모양: <span style="color:${shape.color}">${shape.shape.trim()}</span></div>
+      <div style="font-size:12px;color:#555;margin-top:4px;line-height:1.7">${shape.msgs.map(m=>'* '+m).join('<br>')}</div>
+      <div class="dlc-reflection">
+        <h4>나의 생각</h4>
+        <p>결과와의 일치도: <b>${agreeText}</b></p>
+        ${state.refText?`<p style="margin-top:6px">소감: ${refNote}</p>`:''}
+        <p style="margin-top:6px">관심 직업: <b>${allJobs}</b></p>
+      </div>
+    </div>
+    <div class="dlc-footer">명덕여중 진로와 직업 | 과제 제출: Google Classroom</div>
+  `;
+
+  // Draw radar chart first, then wait for full render
+  requestAnimationFrame(() => {
+    const dlCanvas = document.getElementById('dl-radar');
+    if (dlCanvas) drawRadar(dlCanvas, state.scores, 240);
+
+    // Give browser 600ms to fully render the off-screen card
+    setTimeout(() => {
+      html2canvas(dlCard, {
+        scale: 2,
+        useCORS: false,
+        allowTaint: true,
+        foreignObjectRendering: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 680,
+        windowWidth: 680
+      }).then(canvas => {
+        // Use blob for more reliable download
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `홀랜드_흥미유형_${state.name}_${c1}${c2}.png`;
+          link.href = url;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          btn.textContent = '저장 완료! 다시 저장하려면 클릭';
+          btn.classList.remove('loading');
+        }, 'image/png');
+      }).catch(err => {
+        console.error('html2canvas error:', err);
+        btn.textContent = '저장 실패 - 다시 시도';
+        btn.classList.remove('loading');
+        alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      });
+    }, 600);
+  });
+}
+</script>
+</body>
+</html>
